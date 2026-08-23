@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import ManageProperty from "./_components/properties/ManageProperty";
 import ManageRequestToProperty from "./_components/requests/ManageRequestToProperty";
-import ManageAmenity from "../admin/_components/amenity/ManageAmenity";
+import ManageAmenity from "./_components/amenity/ManageAmenity";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
