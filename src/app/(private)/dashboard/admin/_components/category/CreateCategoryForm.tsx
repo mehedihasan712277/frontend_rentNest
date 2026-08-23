@@ -3,24 +3,19 @@
 import { useState, type FormEvent } from "react";
 
 import { api } from "@/lib/axios-client";
+import { useCategoryStore, type Category } from "@/store/categoryStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-
-interface Category {
-    id: string;
-    name: string;
-    description: string | null;
-    createdAt: string;
-    updatedAt: string;
-}
 
 interface CreateCategoryFormProps {
     onCreated?: (category: Category) => void;
 }
 
 export function CreateCategoryForm({ onCreated }: CreateCategoryFormProps) {
+    const addCategory = useCategoryStore((state) => state.addCategory);
+
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,6 +46,7 @@ export function CreateCategoryForm({ onCreated }: CreateCategoryFormProps) {
             setSuccess(`"${res.data.data.name}" was created.`);
             setName("");
             setDescription("");
+            addCategory(res.data.data);
             onCreated?.(res.data.data);
         } catch (err) {
             setError(
