@@ -33,6 +33,18 @@ interface DeleteCategoryResponse {
     data: null;
 }
 
+interface UpdateCategoryPayload {
+    name: string;
+    description: string;
+}
+
+interface UpdateCategoryResponse {
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data: Category;
+}
+
 interface CategoryState {
     categories: Category[];
     /** true only on the very first load (no data on screen yet) */
@@ -42,10 +54,16 @@ interface CategoryState {
     error: string | null;
     /** id of the category currently being deleted, if any */
     deletingId: string | null;
+    /** id of the category currently being updated, if any */
+    updatingId: string | null;
 
     fetchCategories: () => Promise<void>;
     addCategory: (category: Category) => void;
     deleteCategory: (id: string) => Promise<boolean>;
+    updateCategory: (
+        id: string,
+        payload: UpdateCategoryPayload,
+    ) => Promise<boolean>;
 }
 
 export const useCategoryStore = create<CategoryState>((set, get) => ({
@@ -54,6 +72,7 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
     isRefetching: false,
     error: null,
     deletingId: null,
+    updatingId: null,
 
     fetchCategories: async () => {
         const hasData = get().categories.length > 0;
@@ -102,6 +121,27 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
             return false;
         } finally {
             set({ deletingId: null });
+        }
+    },
+
+    updateCategory: async (id, payload) => {
+        set({ updatingId: id, error: null });
+        try {
+            await api.put<UpdateCategoryResponse>(`/categories/${id}`, payload);
+            // Re-sync with the server instead of patching locally, so any
+            // server-side derived fields (e.g. updatedAt) stay accurate.
+            await get().fetchCategories();
+            return true;
+        } catch (err) {
+            set({
+                error:
+                    err instanceof Error
+                        ? err.message
+                        : "Could not update the category.",
+            });
+            return false;
+        } finally {
+            set({ updatingId: null });
         }
     },
 }));

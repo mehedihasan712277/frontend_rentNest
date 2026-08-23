@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 
 import { useCategoryStore } from "@/store/categoryStore";
+import { EditCategoryDialog } from "./EditCategoryDialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -101,79 +102,87 @@ export default function GetCategory() {
                                     </p>
                                 </div>
 
-                                <AlertDialog>
-                                    <AlertDialogTrigger
-                                        className={cn(
-                                            buttonVariants({
-                                                variant: "outline",
-                                                size: "icon",
-                                            }),
-                                        )}
-                                        disabled={isDeleting}
-                                        aria-label={`Delete ${category.name}`}
-                                    >
-                                        {isDeleting ? (
-                                            <Loader2 className="size-4 animate-spin" />
-                                        ) : (
-                                            <Trash2 className="size-4" />
-                                        )}
-                                    </AlertDialogTrigger>
+                                <div className="flex shrink-0 items-center gap-2">
+                                    <EditCategoryDialog category={category} />
 
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>
-                                                Delete &quot;{category.name}
-                                                &quot;?
-                                            </AlertDialogTitle>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger
+                                            className={cn(
+                                                buttonVariants({
+                                                    variant: "outline",
+                                                    size: "icon",
+                                                }),
+                                            )}
+                                            disabled={isDeleting}
+                                            aria-label={`Delete ${category.name}`}
+                                        >
+                                            {isDeleting ? (
+                                                <Loader2 className="size-4 animate-spin" />
+                                            ) : (
+                                                <Trash2 className="size-4" />
+                                            )}
+                                        </AlertDialogTrigger>
 
-                                            <AlertDialogDescription>
-                                                This action cannot be undone.
-                                                {category._count.properties >
-                                                    0 && (
-                                                    <>
-                                                        {" "}
-                                                        This category has{" "}
-                                                        {
-                                                            category._count
-                                                                .properties
-                                                        }{" "}
-                                                        linked{" "}
-                                                        {category._count
-                                                            .properties === 1
-                                                            ? "property"
-                                                            : "properties"}
-                                                        .
-                                                    </>
-                                                )}
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>
+                                                    Delete &quot;
+                                                    {category.name}&quot;?
+                                                </AlertDialogTitle>
 
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel
-                                                disabled={isDeleting}
-                                            >
-                                                Cancel
-                                            </AlertDialogCancel>
+                                                <AlertDialogDescription>
+                                                    This action cannot be
+                                                    undone.
+                                                    {category?._count
+                                                        .properties > 0 && (
+                                                        <>
+                                                            {" "}
+                                                            This category has{" "}
+                                                            {
+                                                                category._count
+                                                                    .properties
+                                                            }{" "}
+                                                            linked{" "}
+                                                            {category?._count
+                                                                .properties ===
+                                                            1
+                                                                ? "property"
+                                                                : "properties"}
+                                                            .
+                                                        </>
+                                                    )}
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
 
-                                            <AlertDialogAction
-                                                disabled={isDeleting}
-                                                onClick={() =>
-                                                    deleteCategory(category.id)
-                                                }
-                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                            >
-                                                {isDeleting ? (
-                                                    <>
-                                                        <Loader2 className="size-4 animate-spin" />
-                                                        Deleting...
-                                                    </>
-                                                ) : (
-                                                    "Delete"
-                                                )}
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel
+                                                    disabled={isDeleting}
+                                                >
+                                                    Cancel
+                                                </AlertDialogCancel>
+
+                                                <AlertDialogAction
+                                                    disabled={isDeleting}
+                                                    onClick={() =>
+                                                        deleteCategory(
+                                                            category.id,
+                                                        )
+                                                    }
+                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                >
+                                                    {isDeleting ? (
+                                                        <>
+                                                            <Loader2 className="size-4 animate-spin" />
+                                                            Deleting...
+                                                        </>
+                                                    ) : (
+                                                        "Delete"
+                                                    )}
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
                             </div>
                         );
                     })}
