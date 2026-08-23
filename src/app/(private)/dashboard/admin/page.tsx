@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 import ManageAmenity from "./_components/amenity/ManageAmenity";
 import ManageCategory from "./_components/category/ManageCategory";
+import { UserProfileCard } from "@/components/shared/UserProfileCard";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -28,11 +29,11 @@ const tabs = [
         label: "Amenity",
         component: <ManageAmenity />,
     },
-    // {
-    //   id: "new-tab",
-    //   label: "New Tab",
-    //   component: <NewTabComponent />,
-    // },
+    {
+        id: "profile",
+        label: "Profile",
+        component: <UserProfileCard></UserProfileCard>,
+    },
 ];
 
 const AdminDashboardPage = () => {

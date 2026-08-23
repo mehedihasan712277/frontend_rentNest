@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import ManageProperty from "./_components/properties/ManageProperty";
 import ManageRequestToProperty from "./_components/requests/ManageRequestToProperty";
 import ManageAmenity from "./_components/amenity/ManageAmenity";
+import { UserProfileCard } from "@/components/shared/UserProfileCard";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -32,6 +33,11 @@ const tabs = [
         id: "amenity",
         label: "Amenity",
         component: <ManageAmenity></ManageAmenity>,
+    },
+    {
+        id: "profile",
+        label: "Profile",
+        component: <UserProfileCard></UserProfileCard>,
     },
 ];
 
