@@ -1,3 +1,4 @@
+import ManageAmenity from "./_components/amenity/ManageAmenity";
 import ManageCategory from "./_components/category/ManageCategory";
 
 const AdminDashboardPage = () => {
@@ -5,6 +6,7 @@ const AdminDashboardPage = () => {
         <div>
             <h1>Admin dashboar</h1>
             <ManageCategory></ManageCategory>
+            <ManageAmenity></ManageAmenity>
         </div>
     );
 };
