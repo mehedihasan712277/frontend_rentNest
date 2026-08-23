@@ -16,6 +16,7 @@ export function LoginForm() {
         initialState,
     );
 
+    console.log(state);
     return (
         <form action={formAction} className="space-y-5" noValidate>
             {state?.error && (
