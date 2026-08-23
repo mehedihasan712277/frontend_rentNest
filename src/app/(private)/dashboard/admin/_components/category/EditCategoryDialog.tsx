@@ -26,12 +26,12 @@ interface EditCategoryDialogProps {
 
 export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
     const updateCategory = useCategoryStore((state) => state.updateCategory);
+    const updatingId = useCategoryStore((state) => state.updatingId);
+    const isSubmitting = updatingId === category.id;
 
     const [open, setOpen] = useState(false);
     const [name, setName] = useState(category.name);
     const [description, setDescription] = useState(category.description);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     // Reset the form to the latest values every time the dialog opens, so a
     // previous unsaved edit doesn't linger if it's reopened later.
@@ -39,32 +39,23 @@ export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
         if (open) {
             setName(category.name);
             setDescription(category.description);
-            setError(null);
         }
     }, [open, category.name, category.description]);
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-
-        if (!name.trim()) {
-            setError("Category name is required.");
-            return;
-        }
-
-        setIsSubmitting(true);
-        setError(null);
+        if (!name.trim()) return;
 
         const ok = await updateCategory(category.id, {
             name: name.trim(),
             description: description.trim(),
         });
 
-        setIsSubmitting(false);
-
+        // The result message shows in the shared feedback dialog. On
+        // success, close this one too; on failure, leave it open so the
+        // person can fix and retry without retyping everything.
         if (ok) {
             setOpen(false);
-        } else {
-            setError("Could not update the category. Please try again.");
         }
     }
 
@@ -74,7 +65,6 @@ export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
                 className={cn(
                     buttonVariants({ variant: "outline", size: "icon" }),
                 )}
-                disabled={isSubmitting}
                 aria-label={`Edit ${category.name}`}
             >
                 <Pencil className="size-4" />
@@ -91,15 +81,6 @@ export function EditCategoryDialog({ category }: EditCategoryDialogProps) {
                     </DialogHeader>
 
                     <div className="space-y-4 py-4">
-                        {error && (
-                            <p
-                                role="alert"
-                                className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-                            >
-                                {error}
-                            </p>
-                        )}
-
                         <div className="space-y-2">
                             <Label htmlFor={`edit-name-${category.id}`}>
                                 Name

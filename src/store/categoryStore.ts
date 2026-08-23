@@ -26,11 +26,26 @@ export interface GetAllCategoriesResponse {
     data: Category[];
 }
 
-interface DeleteCategoryResponse {
+interface CreateCategoryPayload {
+    name: string;
+    description?: string;
+}
+
+// The create endpoint only echoes back the fields it was given — no
+// `_count`/`properties` yet, since a brand new category has no properties
+// linked. We don't rely on `data` for anything other than the message, so
+// this is intentionally narrower than `Category`.
+interface CreateCategoryResponse {
     success: boolean;
     statusCode: number;
     message: string;
-    data: null;
+    data: {
+        id: string;
+        name: string;
+        description: string | null;
+        createdAt: string;
+        updatedAt: string;
+    };
 }
 
 interface UpdateCategoryPayload {
@@ -45,41 +60,62 @@ interface UpdateCategoryResponse {
     data: Category;
 }
 
+interface DeleteCategoryResponse {
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data: null;
+}
+
+/** The message returned by a create/update/delete call, shown in a dialog. */
+interface OperationFeedback {
+    message: string;
+    variant: "success" | "error";
+}
+
 interface CategoryState {
     categories: Category[];
     /** true only on the very first load (no data on screen yet) */
     isLoading: boolean;
     /** true on subsequent fetches, e.g. the refetch after a delete */
     isRefetching: boolean;
-    error: string | null;
+    /** error from fetchCategories specifically, shown inline */
+    fetchError: string | null;
+    /** true while a create request is in flight */
+    isCreating: boolean;
     /** id of the category currently being deleted, if any */
     deletingId: string | null;
     /** id of the category currently being updated, if any */
     updatingId: string | null;
+    /** message from the last create/update/delete call, shown in a dialog */
+    feedback: OperationFeedback | null;
 
     fetchCategories: () => Promise<void>;
-    addCategory: (category: Category) => void;
+    createCategory: (payload: CreateCategoryPayload) => Promise<boolean>;
     deleteCategory: (id: string) => Promise<boolean>;
     updateCategory: (
         id: string,
         payload: UpdateCategoryPayload,
     ) => Promise<boolean>;
+    clearFeedback: () => void;
 }
 
 export const useCategoryStore = create<CategoryState>((set, get) => ({
     categories: [],
     isLoading: false,
     isRefetching: false,
-    error: null,
+    fetchError: null,
+    isCreating: false,
     deletingId: null,
     updatingId: null,
+    feedback: null,
 
     fetchCategories: async () => {
         const hasData = get().categories.length > 0;
         set(
             hasData
-                ? { isRefetching: true, error: null }
-                : { isLoading: true, error: null },
+                ? { isRefetching: true, fetchError: null }
+                : { isLoading: true, fetchError: null },
         );
 
         try {
@@ -87,7 +123,7 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
             set({ categories: res.data.data });
         } catch (err) {
             set({
-                error:
+                fetchError:
                     err instanceof Error
                         ? err.message
                         : "Could not load categories.",
@@ -97,26 +133,57 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
         }
     },
 
-    // Optimistically drop a freshly created category into the list so the
-    // UI updates instantly after CreateCategoryForm posts it.
-    addCategory: (category) => {
-        set((state) => ({ categories: [category, ...state.categories] }));
-    },
-
-    deleteCategory: async (id) => {
-        set({ deletingId: id, error: null });
+    createCategory: async (payload) => {
+        set({ isCreating: true });
         try {
-            await api.delete<DeleteCategoryResponse>(`/categories/${id}`);
-            // Re-sync with the server instead of just splicing locally,
-            // so counts/ordering stay accurate.
+            const res = await api.post<CreateCategoryResponse>(
+                "/categories",
+                payload,
+            );
+            // Re-sync with the server: the create response doesn't include
+            // `_count`/`properties`, and a full refetch keeps ordering
+            // consistent with everything else in the list.
             await get().fetchCategories();
+            set({
+                feedback: { message: res.data.message, variant: "success" },
+            });
             return true;
         } catch (err) {
             set({
-                error:
-                    err instanceof Error
-                        ? err.message
-                        : "Could not delete the category.",
+                feedback: {
+                    message:
+                        err instanceof Error
+                            ? err.message
+                            : "Could not create the category.",
+                    variant: "error",
+                },
+            });
+            return false;
+        } finally {
+            set({ isCreating: false });
+        }
+    },
+
+    deleteCategory: async (id) => {
+        set({ deletingId: id });
+        try {
+            const res = await api.delete<DeleteCategoryResponse>(
+                `/categories/${id}`,
+            );
+            await get().fetchCategories();
+            set({
+                feedback: { message: res.data.message, variant: "success" },
+            });
+            return true;
+        } catch (err) {
+            set({
+                feedback: {
+                    message:
+                        err instanceof Error
+                            ? err.message
+                            : "Could not delete the category.",
+                    variant: "error",
+                },
             });
             return false;
         } finally {
@@ -125,23 +192,32 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
     },
 
     updateCategory: async (id, payload) => {
-        set({ updatingId: id, error: null });
+        set({ updatingId: id });
         try {
-            await api.put<UpdateCategoryResponse>(`/categories/${id}`, payload);
-            // Re-sync with the server instead of patching locally, so any
-            // server-side derived fields (e.g. updatedAt) stay accurate.
+            const res = await api.put<UpdateCategoryResponse>(
+                `/categories/${id}`,
+                payload,
+            );
             await get().fetchCategories();
+            set({
+                feedback: { message: res.data.message, variant: "success" },
+            });
             return true;
         } catch (err) {
             set({
-                error:
-                    err instanceof Error
-                        ? err.message
-                        : "Could not update the category.",
+                feedback: {
+                    message:
+                        err instanceof Error
+                            ? err.message
+                            : "Could not update the category.",
+                    variant: "error",
+                },
             });
             return false;
         } finally {
             set({ updatingId: null });
         }
     },
+
+    clearFeedback: () => set({ feedback: null }),
 }));

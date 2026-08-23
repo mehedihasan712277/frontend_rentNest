@@ -5,6 +5,7 @@ import { Loader2, Trash2 } from "lucide-react";
 
 import { useCategoryStore } from "@/store/categoryStore";
 import { EditCategoryDialog } from "./EditCategoryDialog";
+import { CategoryFeedbackDialog } from "./CategoryFeedbackDialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -37,7 +38,7 @@ export default function GetCategory() {
         categories,
         isLoading,
         isRefetching,
-        error,
+        fetchError,
         deletingId,
         fetchCategories,
         deleteCategory,
@@ -49,6 +50,10 @@ export default function GetCategory() {
 
     return (
         <div className="space-y-4">
+            {/* Mounted once here; it renders whenever the store's `feedback`
+                is set by createCategory / updateCategory / deleteCategory. */}
+            <CategoryFeedbackDialog />
+
             <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold">Categories</h2>
                 {isRefetching && (
@@ -56,12 +61,12 @@ export default function GetCategory() {
                 )}
             </div>
 
-            {error && (
+            {fetchError && (
                 <p
                     role="alert"
                     className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 >
-                    {error}
+                    {fetchError}
                 </p>
             )}
 
