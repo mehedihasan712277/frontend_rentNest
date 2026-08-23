@@ -28,6 +28,15 @@ interface LoginApiResponse {
         refreshToken: string;
     };
 }
+export interface RegisterState {
+    error?: string;
+    fieldErrors?: {
+        name?: string;
+        email?: string;
+        password?: string;
+        role?: string;
+    };
+}
 
 function isValidEmail(value: string) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -109,4 +118,62 @@ export async function logoutAction() {
 
     await clearAuthCookies();
     redirect(LOGIN_PATH);
+}
+
+// ADMIN is intentionally excluded — no public registration path for it.
+const PUBLIC_ROLES = ["TENANT", "LANDLORD"] as const;
+type PublicRole = (typeof PUBLIC_ROLES)[number];
+
+function isPublicRole(value: string): value is PublicRole {
+    return (PUBLIC_ROLES as readonly string[]).includes(value);
+}
+
+export async function registerAction(
+    _prevState: RegisterState,
+    formData: FormData,
+): Promise<RegisterState> {
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    const role = String(formData.get("role") ?? "");
+
+    const fieldErrors: RegisterState["fieldErrors"] = {};
+    if (!name) fieldErrors.name = "Name is required.";
+    if (!email) fieldErrors.email = "Email is required.";
+    else if (!isValidEmail(email))
+        fieldErrors.email = "Enter a valid email address.";
+    if (!password) fieldErrors.password = "Password is required.";
+    else if (password.length < 8)
+        fieldErrors.password = "Password must be at least 8 characters.";
+    if (!isPublicRole(role)) fieldErrors.role = "Select an account type.";
+
+    if (Object.keys(fieldErrors).length > 0) {
+        return { fieldErrors };
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password, role }),
+            cache: "no-store",
+        });
+
+        const payload = await res.json().catch(() => null);
+
+        if (!res.ok || !payload?.success) {
+            return {
+                error:
+                    payload?.message ||
+                    "Could not create your account. Please try again.",
+            };
+        }
+    } catch {
+        return {
+            error: "Could not reach the server. Please try again in a moment.",
+        };
+    }
+
+    // Register returns only the created user, no tokens — send them to log in.
+    redirect("/auth/login?registered=1");
 }
