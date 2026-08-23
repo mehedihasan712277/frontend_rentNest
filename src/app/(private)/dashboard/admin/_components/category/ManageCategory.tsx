@@ -3,11 +3,11 @@ import GetCategory from "./GetCategory";
 
 const ManageCategory = () => {
     return (
-        <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-1">
+        <div className="grid sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-1">
                 <CreateCategoryForm></CreateCategoryForm>
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
                 <GetCategory></GetCategory>
             </div>
         </div>

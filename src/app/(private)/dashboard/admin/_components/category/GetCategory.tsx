@@ -6,6 +6,7 @@ import { Loader2, Trash2 } from "lucide-react";
 import { useCategoryStore } from "@/store/categoryStore";
 import { EditCategoryDialog } from "./EditCategoryDialog";
 import { CategoryFeedbackDialog } from "./CategoryFeedbackDialog";
+import { CategoryDetailsDialog } from "./CategoryDetailsDialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -26,7 +27,7 @@ function CategorySkeletonRow() {
         <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
             <div className="space-y-2">
                 <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3 w-64" />
+                <Skeleton className="h-3 w-24" />
             </div>
             <Skeleton className="size-9 rounded-md" />
         </div>
@@ -88,15 +89,11 @@ export default function GetCategory() {
                         return (
                             <div
                                 key={category.id}
-                                className="flex items-center justify-between gap-4  border p-4"
+                                className="flex items-center justify-between gap-4 border p-4"
                             >
                                 <div className="min-w-0">
-                                    <p className="truncate font-medium">
+                                    <p className="font-medium">
                                         {category.name}
-                                    </p>
-                                    <p className="truncate text-sm text-muted-foreground">
-                                        {category.description ||
-                                            "No description"}
                                     </p>
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         {category?._count?.properties}{" "}
@@ -108,6 +105,11 @@ export default function GetCategory() {
                                 </div>
 
                                 <div className="flex shrink-0 items-center gap-2">
+                                    <CategoryDetailsDialog
+                                        categoryId={category.id}
+                                        categoryName={category.name}
+                                    />
+
                                     <EditCategoryDialog category={category} />
 
                                     <AlertDialog>

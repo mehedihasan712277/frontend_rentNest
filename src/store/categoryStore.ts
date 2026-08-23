@@ -67,6 +67,63 @@ interface DeleteCategoryResponse {
     data: null;
 }
 
+/** Landlord info embedded in a property inside the single-category response. */
+export interface CategoryPropertyLandlord {
+    id: string;
+    name: string;
+    email: string;
+}
+
+/** Amenity info embedded in a property inside the single-category response. */
+export interface CategoryPropertyAmenity {
+    id: string;
+    name: string;
+    description: string;
+}
+
+/** A property as embedded in the single-category detail response. */
+export interface CategoryPropertyDetail {
+    id: string;
+    landlordId: string;
+    categoryId: string;
+    title: string;
+    description: string;
+    location: string;
+    price: number;
+    area: number;
+    thumbnail: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    _count: {
+        reviews: number;
+        amenities: number;
+        rentalRequests: number;
+    };
+    landlord: CategoryPropertyLandlord;
+    amenities: CategoryPropertyAmenity[];
+}
+
+/** Full shape of a single category, from the protected single-item endpoint. */
+export interface CategoryDetail {
+    id: string;
+    name: string;
+    description: string;
+    createdAt: string;
+    updatedAt: string;
+    _count: {
+        properties: number;
+    };
+    properties: CategoryPropertyDetail[];
+}
+
+interface GetSingleCategoryResponse {
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data: CategoryDetail;
+}
+
 /** The message returned by a create/update/delete call, shown in a dialog. */
 interface OperationFeedback {
     message: string;
@@ -90,6 +147,11 @@ interface CategoryState {
     /** message from the last create/update/delete call, shown in a dialog */
     feedback: OperationFeedback | null;
 
+    // Single-category details, used by the "details" dialog on each row.
+    selectedCategory: CategoryDetail | null;
+    isLoadingDetails: boolean;
+    detailsError: string | null;
+
     fetchCategories: () => Promise<void>;
     createCategory: (payload: CreateCategoryPayload) => Promise<boolean>;
     deleteCategory: (id: string) => Promise<boolean>;
@@ -97,6 +159,8 @@ interface CategoryState {
         id: string,
         payload: UpdateCategoryPayload,
     ) => Promise<boolean>;
+    fetchCategoryDetails: (id: string) => Promise<void>;
+    clearCategoryDetails: () => void;
     clearFeedback: () => void;
 }
 
@@ -109,6 +173,10 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
     deletingId: null,
     updatingId: null,
     feedback: null,
+
+    selectedCategory: null,
+    isLoadingDetails: false,
+    detailsError: null,
 
     fetchCategories: async () => {
         const hasData = get().categories.length > 0;
@@ -140,9 +208,6 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
                 "/categories",
                 payload,
             );
-            // Re-sync with the server: the create response doesn't include
-            // `_count`/`properties`, and a full refetch keeps ordering
-            // consistent with everything else in the list.
             await get().fetchCategories();
             set({
                 feedback: { message: res.data.message, variant: "success" },
@@ -218,6 +283,32 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
             set({ updatingId: null });
         }
     },
+
+    fetchCategoryDetails: async (id) => {
+        set({
+            isLoadingDetails: true,
+            detailsError: null,
+            selectedCategory: null,
+        });
+        try {
+            const res = await api.get<GetSingleCategoryResponse>(
+                `/categories/${id}`,
+            );
+            set({ selectedCategory: res.data.data });
+        } catch (err) {
+            set({
+                detailsError:
+                    err instanceof Error
+                        ? err.message
+                        : "Could not load category details.",
+            });
+        } finally {
+            set({ isLoadingDetails: false });
+        }
+    },
+
+    clearCategoryDetails: () =>
+        set({ selectedCategory: null, detailsError: null }),
 
     clearFeedback: () => set({ feedback: null }),
 }));
