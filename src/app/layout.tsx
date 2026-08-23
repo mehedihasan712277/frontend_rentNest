@@ -6,6 +6,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/provider/theme-provider";
 import { Footer } from "@/components/shared/Footer";
+import Navbar from "@/components/shared/Navbar";
 
 const outfit = Outfit({
     subsets: ["latin"],
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
             <body className="min-h-full flex flex-col">
                 <ThemeProvider>
+                    <Navbar></Navbar>
                     <div>{children}</div>
                     <Footer />
                 </ThemeProvider>
