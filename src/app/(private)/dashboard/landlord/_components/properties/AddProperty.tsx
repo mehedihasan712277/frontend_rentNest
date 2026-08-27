@@ -150,7 +150,12 @@ const AddProperty = () => {
                     onValueChange={(value) => setCategoryId(value ?? "")}
                 >
                     <SelectTrigger id="property-category" className="w-full">
-                        <SelectValue placeholder="Select a category" />
+                        <SelectValue placeholder="Select a category">
+                            {(value: string | null) =>
+                                categories.find((c) => c.id === value)?.name ??
+                                "Select a category"
+                            }
+                        </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                         {categories.map((category) => (
