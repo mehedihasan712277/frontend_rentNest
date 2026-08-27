@@ -1,5 +1,13 @@
+"use client";
+
+import { useParams } from "next/navigation";
+
 const PropertyDetailsPage = () => {
-    return <div>PropertyDetailsPage</div>;
+    const params = useParams<{ id: string }>();
+
+    const { id } = params;
+
+    return <div>PropertyDetailsPage {id}</div>;
 };
 
 export default PropertyDetailsPage;
