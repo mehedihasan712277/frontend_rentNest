@@ -8,6 +8,7 @@ import { usePropertyStore } from "@/store/propertyStore";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -47,8 +48,10 @@ const GetMyProperties = () => {
         isRefetchingMyProperties,
         myPropertiesError,
         deletingId,
+        togglingStatusId,
         fetchMyProperties,
         deleteProperty,
+        changePropertyStatus,
     } = usePropertyStore();
 
     useEffect(() => {
@@ -93,6 +96,8 @@ const GetMyProperties = () => {
                 <div className="space-y-3">
                     {myProperties.map((property) => {
                         const isDeleting = deletingId === property.id;
+                        const isTogglingStatus =
+                            togglingStatusId === property.id;
                         const hasActiveRentals = property.rentals.length > 0;
 
                         return (
@@ -106,11 +111,12 @@ const GetMyProperties = () => {
                                             {property.title}
                                         </p>
                                         <Badge
-                                            variant={
+                                            variant="outline"
+                                            className={cn(
                                                 property.status === "AVAILABLE"
-                                                    ? "secondary"
-                                                    : "outline"
-                                            }
+                                                    ? "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400"
+                                                    : "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400",
+                                            )}
                                         >
                                             {property.status}
                                         </Badge>
@@ -125,7 +131,25 @@ const GetMyProperties = () => {
                                     </p>
                                 </div>
 
-                                <div className="flex flex-wrap shrink-0 items-center gap-2">
+                                <div className="flex flex-wrap shrink-0 items-center gap-3">
+                                    <div className="flex items-center gap-2">
+                                        {isTogglingStatus && (
+                                            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                                        )}
+                                        <Switch
+                                            checked={
+                                                property.status === "AVAILABLE"
+                                            }
+                                            disabled={isTogglingStatus}
+                                            onCheckedChange={() =>
+                                                changePropertyStatus(
+                                                    property.id,
+                                                )
+                                            }
+                                            aria-label={`Toggle availability for ${property.title}`}
+                                        />
+                                    </div>
+
                                     <PropertyDetailsDialog
                                         property={property}
                                     />
