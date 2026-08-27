@@ -145,6 +145,12 @@ export interface MyPropertyAmenity {
     description: string;
 }
 
+/** Tenant as embedded in a my-properties rental request/review/rental. */
+export interface MyPropertyTenant {
+    name: string;
+    email: string;
+}
+
 export interface MyPropertyRentalRequest {
     id: string;
     tenantId: string;
@@ -156,6 +162,7 @@ export interface MyPropertyRentalRequest {
     stripeSubscriptionId: string;
     createdAt: string;
     updatedAt: string;
+    tenant: MyPropertyTenant;
 }
 
 export interface MyPropertyReview {
@@ -168,6 +175,7 @@ export interface MyPropertyReview {
     status: string;
     createdAt: string;
     updatedAt: string;
+    tenant: MyPropertyTenant;
 }
 
 export interface MyPropertyRental {
@@ -183,6 +191,7 @@ export interface MyPropertyRental {
     currentPeriodStart: string | null;
     currentPeriodEnd: string | null;
     cancelAtPeriodEnd: boolean;
+    tenant: MyPropertyTenant;
 }
 
 /** Shape of a property as returned by the landlord's own-properties endpoint. */
@@ -205,6 +214,7 @@ export interface MyProperty {
     rentalRequests: MyPropertyRentalRequest[];
     reviews: MyPropertyReview[];
     rentals: MyPropertyRental[];
+    category: PropertyListCategory;
 }
 
 interface GetMyPropertiesResponse {

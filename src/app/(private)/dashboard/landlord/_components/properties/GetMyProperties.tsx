@@ -22,15 +22,17 @@ import {
 import { cn } from "@/lib/utils";
 import { PropertyFeedbackDialog } from "./PropertyFeedbackDialog";
 import { EditPropertyDialog } from "./EditPropertyDialog";
+import { PropertyDetailsDialog } from "./PropertyDetailsDialog";
 
 function PropertySkeletonRow() {
     return (
-        <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+        <div className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-2">
                 <Skeleton className="h-4 w-40" />
                 <Skeleton className="h-3 w-28" />
             </div>
             <div className="flex gap-2">
+                <Skeleton className="size-9 rounded-md" />
                 <Skeleton className="size-9 rounded-md" />
                 <Skeleton className="size-9 rounded-md" />
             </div>
@@ -96,10 +98,10 @@ const GetMyProperties = () => {
                         return (
                             <div
                                 key={property.id}
-                                className="flex items-center justify-between gap-4 border p-4"
+                                className="flex flex-col gap-4 border p-4 sm:flex-row sm:items-center sm:justify-between"
                             >
                                 <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <p className="truncate font-medium">
                                             {property.title}
                                         </p>
@@ -112,6 +114,9 @@ const GetMyProperties = () => {
                                         >
                                             {property.status}
                                         </Badge>
+                                        <Badge variant="outline">
+                                            {property.category.name}
+                                        </Badge>
                                     </div>
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         {property.location} ·{" "}
@@ -120,7 +125,11 @@ const GetMyProperties = () => {
                                     </p>
                                 </div>
 
-                                <div className="flex shrink-0 items-center gap-2">
+                                <div className="flex flex-wrap shrink-0 items-center gap-2">
+                                    <PropertyDetailsDialog
+                                        property={property}
+                                    />
+
                                     <EditPropertyDialog property={property} />
 
                                     <AlertDialog>
