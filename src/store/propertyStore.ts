@@ -21,6 +21,19 @@ export interface PropertyListCategory {
     name: string;
 }
 
+/** Review as embedded in the public property list response (no `tenant`). */
+export interface PropertyReview {
+    id: string;
+    tenantId: string;
+    propertyId: string;
+    rentalRequestId: string;
+    rating: number;
+    comment: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 /** Shape of a property as returned by the public list endpoint. */
 export interface Property {
     id: string;
@@ -37,6 +50,7 @@ export interface Property {
     status: PropertyStatus;
     createdAt: string;
     updatedAt: string;
+    reviews: PropertyReview[];
     landlord: PropertyListLandlord;
     amenities: PropertyAmenity[];
     category: PropertyListCategory;
@@ -302,6 +316,49 @@ export interface AdminPropertyLandlord {
     email: string;
 }
 
+/** Review as embedded in the admin properties response (no `tenant`). */
+export interface AdminReview {
+    id: string;
+    tenantId: string;
+    propertyId: string;
+    rentalRequestId: string;
+    rating: number;
+    comment: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+/** Rental request as embedded in the admin properties response (no `tenant`). */
+export interface AdminRentalRequest {
+    id: string;
+    tenantId: string;
+    propertyId: string;
+    landlordId: string;
+    message: string;
+    status: string;
+    stripeSessionId: string;
+    stripeSubscriptionId: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+/** Rental as embedded in the admin properties response (no `tenant`). */
+export interface AdminRental {
+    id: string;
+    tenantId: string;
+    propertyId: string;
+    startDate: string;
+    endDate: string | null;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    stripeSubscriptionId: string;
+    currentPeriodStart: string | null;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+}
+
 /** Shape of a property as returned by the admin properties endpoint. */
 export interface AdminProperty {
     id: string;
@@ -318,12 +375,12 @@ export interface AdminProperty {
     status: PropertyStatus;
     createdAt: string;
     updatedAt: string;
-    reviews: MyPropertyReview[];
+    reviews: AdminReview[];
     landlord: AdminPropertyLandlord;
     amenities: PropertyAmenity[];
     category: PropertyListCategory;
-    rentalRequests: MyPropertyRentalRequest[];
-    rentals: MyPropertyRental[];
+    rentalRequests: AdminRentalRequest[];
+    rentals: AdminRental[];
 }
 
 interface GetAdminPropertiesResponse {
