@@ -31,7 +31,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             suppressHydrationWarning
         >
             <body className="min-h-full flex flex-col">
-                <ThemeProvider>
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                    disableTransitionOnChange
+                >
                     <Navbar></Navbar>
                     <div>{children}</div>
                     <Footer />
