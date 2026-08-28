@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CreditCard } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,35 +11,34 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 
-const SuccessPage = () => {
+const CancelPage = () => {
     return (
         <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
             <Card className="w-full max-w-md text-center">
                 <CardHeader className="items-center">
-                    <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/40">
-                        <CheckCircle2 className="size-9 text-green-600 dark:text-green-400" />
+                    <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-muted">
+                        <CreditCard className="size-8 text-muted-foreground" />
                     </div>
 
                     <CardTitle className="text-2xl">
-                        Payment Successful!
+                        Payment Cancelled
                     </CardTitle>
 
                     <CardDescription className="max-w-sm">
-                        Your payment has been successfully processed. Thank you
-                        for your purchase.
+                        Your payment was cancelled and no charge was made. You
+                        can return to your dashboard.
                     </CardDescription>
                 </CardHeader>
 
                 <CardContent>
                     <div className="rounded-lg border bg-muted/40 p-4 text-left">
                         <p className="text-sm font-medium">
-                            What happens next?
+                            Payment not completed
                         </p>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Your payment is confirmed and your request is now
-                            being processed. You can view the latest updates
-                            from your dashboard.
+                            No payment has been charged to your account. You can
+                            continue using your dashboard.
                         </p>
                     </div>
                 </CardContent>
@@ -57,4 +56,4 @@ const SuccessPage = () => {
     );
 };
 
-export default SuccessPage;
+export default CancelPage;
