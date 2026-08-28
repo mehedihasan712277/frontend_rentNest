@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { CreditCard, Loader2, RefreshCw, Trash2 } from "lucide-react";
 
 import {
     SentRentalRequest,
@@ -64,13 +64,23 @@ function SentRequestCard({ request }: SentRequestCardProps) {
     const tenantDeleteRequest = useRentalRequestStore(
         (s) => s.tenantDeleteRequest,
     );
+    const subscribingId = useRentalRequestStore((s) => s.subscribingId);
+    const subscribeToRentalRequest = useRentalRequestStore(
+        (s) => s.subscribeToRentalRequest,
+    );
 
     const isDeleting = tenantDeletingId === request.id;
+    const isSubscribing = subscribingId === request.id;
+    const isApproved = request.status === "APPROVED";
     const isWithdraw = request.status === "PENDING";
 
     const handleConfirmDelete = async () => {
         const ok = await tenantDeleteRequest(request.id);
         if (ok) setConfirmOpen(false);
+    };
+
+    const handleSubscribe = () => {
+        subscribeToRentalRequest(request.id);
     };
 
     return (
@@ -102,85 +112,113 @@ function SentRequestCard({ request }: SentRequestCardProps) {
                     </span>
                 </div>
 
-                <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                    <AlertDialogTrigger
-                        className={cn(
-                            buttonVariants({
-                                variant: isWithdraw ? "default" : "destructive",
-                                size: "sm",
-                            }),
-                            isWithdraw &&
-                                "bg-yellow-500 text-yellow-950 hover:bg-yellow-600",
-                            "disabled:pointer-events-none disabled:opacity-50",
-                        )}
-                        disabled={isDeleting || request.status === "DELETED"}
+                {isApproved ? (
+                    <Button
+                        size="sm"
+                        onClick={handleSubscribe}
+                        disabled={isSubscribing}
                     >
-                        {isDeleting ? (
+                        {isSubscribing ? (
                             <>
                                 <Loader2 className="size-4 animate-spin" />
-                                {isWithdraw ? "Withdrawing…" : "Deleting…"}
+                                Redirecting…
                             </>
                         ) : (
                             <>
-                                <Trash2 className="size-4" />
-                                {isWithdraw ? "Withdraw" : "Delete request"}
+                                <CreditCard className="size-4" />
+                                Subscribe
                             </>
                         )}
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>
-                                {isWithdraw
-                                    ? "Withdraw this rental request?"
-                                    : "Delete this rental request?"}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                                {isWithdraw ? (
-                                    <>
-                                        This will withdraw your pending request
-                                        for &ldquo;
-                                        {request.property.title}&rdquo;. The
-                                        landlord will no longer see it. This
-                                        can&apos;t be undone.
-                                    </>
-                                ) : (
-                                    <>
-                                        This will permanently remove your
-                                        request for &ldquo;
-                                        {request.property.title}&rdquo; from
-                                        your history. This can&apos;t be undone.
-                                    </>
-                                )}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel disabled={isDeleting}>
-                                Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleConfirmDelete();
-                                }}
-                                disabled={isDeleting}
-                                className={cn(
-                                    isWithdraw &&
-                                        "bg-yellow-500 text-yellow-950 hover:bg-yellow-600",
-                                    !isWithdraw &&
-                                        "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-                                )}
-                            >
-                                {isDeleting
-                                    ? isWithdraw
-                                        ? "Withdrawing…"
-                                        : "Deleting…"
-                                    : isWithdraw
-                                      ? "Withdraw"
-                                      : "Delete"}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                    </Button>
+                ) : (
+                    <AlertDialog
+                        open={confirmOpen}
+                        onOpenChange={setConfirmOpen}
+                    >
+                        <AlertDialogTrigger
+                            className={cn(
+                                buttonVariants({
+                                    variant: isWithdraw
+                                        ? "default"
+                                        : "destructive",
+                                    size: "sm",
+                                }),
+                                isWithdraw &&
+                                    "bg-yellow-500 text-yellow-950 hover:bg-yellow-600",
+                                "disabled:pointer-events-none disabled:opacity-50",
+                            )}
+                            disabled={
+                                isDeleting || request.status === "DELETED"
+                            }
+                        >
+                            {isDeleting ? (
+                                <>
+                                    <Loader2 className="size-4 animate-spin" />
+                                    {isWithdraw ? "Withdrawing…" : "Deleting…"}
+                                </>
+                            ) : (
+                                <>
+                                    <Trash2 className="size-4" />
+                                    {isWithdraw ? "Withdraw" : "Delete request"}
+                                </>
+                            )}
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    {isWithdraw
+                                        ? "Withdraw this rental request?"
+                                        : "Delete this rental request?"}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    {isWithdraw ? (
+                                        <>
+                                            This will withdraw your pending
+                                            request for &ldquo;
+                                            {request.property.title}&rdquo;. The
+                                            landlord will no longer see it. This
+                                            can&apos;t be undone.
+                                        </>
+                                    ) : (
+                                        <>
+                                            This will permanently remove your
+                                            request for &ldquo;
+                                            {request.property.title}&rdquo; from
+                                            your history. This can&apos;t be
+                                            undone.
+                                        </>
+                                    )}
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel disabled={isDeleting}>
+                                    Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleConfirmDelete();
+                                    }}
+                                    disabled={isDeleting}
+                                    className={cn(
+                                        isWithdraw &&
+                                            "bg-yellow-500 text-yellow-950 hover:bg-yellow-600",
+                                        !isWithdraw &&
+                                            "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+                                    )}
+                                >
+                                    {isDeleting
+                                        ? isWithdraw
+                                            ? "Withdrawing…"
+                                            : "Deleting…"
+                                        : isWithdraw
+                                          ? "Withdraw"
+                                          : "Delete"}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
             </CardContent>
         </Card>
     );
@@ -201,7 +239,7 @@ const MySentRentalRequest = () => {
         fetchMySentRequests();
     }, [fetchMySentRequests]);
 
-    // Auto-dismiss the delete feedback banner after a few seconds.
+    // Auto-dismiss the feedback banner after a few seconds.
     useEffect(() => {
         if (!feedback) return;
         const timer = setTimeout(() => clearFeedback(), 4000);
