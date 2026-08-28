@@ -17,6 +17,7 @@ import ManageAmenity from "./_components/amenity/ManageAmenity";
 import ManageCategory from "./_components/category/ManageCategory";
 import { UserProfileCard } from "@/components/shared/UserProfileCard";
 import GetAdminProperties from "./_components/properties/GetAdminProperties";
+import AllRentalRequest from "./_components/requests/AllRentalRequest";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -39,6 +40,11 @@ const tabs = [
         id: "property",
         label: "Property",
         component: <GetAdminProperties></GetAdminProperties>,
+    },
+    {
+        id: "request",
+        label: "Requests",
+        component: <AllRentalRequest></AllRentalRequest>,
     },
 ];
 
