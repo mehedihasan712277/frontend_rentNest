@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { UserProfileCard } from "@/components/shared/UserProfileCard";
 import MySentRentalRequest from "./_components/my-sent-rental-request/MySentRentalRequest";
 import MyRentals from "./_components/myrentals/MyRentals";
+import MyPayment from "./_components/payment/MyPayment";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -33,6 +34,11 @@ const tabs = [
         label: "Rentals",
         component: <MyRentals></MyRentals>,
     },
+    {
+        id: "payments",
+        label: "Payment",
+        component: <MyPayment></MyPayment>,
+    },
 ];
 
 const TenantDashboardPage = () => {
@@ -43,7 +49,7 @@ const TenantDashboardPage = () => {
         <div className="p-4 md:p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl font-bold">Landlord Dashboard</h1>
+                    <h1 className="text-2xl font-bold">Tenant Dashboard</h1>
 
                     {/* Mobile: Sheet trigger for navigating tabs */}
                     <div className="md:hidden">

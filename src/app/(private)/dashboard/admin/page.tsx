@@ -20,6 +20,7 @@ import GetAdminProperties from "./_components/properties/GetAdminProperties";
 import AllRentalRequest from "./_components/requests/AllRentalRequest";
 import ManageUsers from "./_components/users/ManageUsers";
 import AllRentalInfo from "./_components/rentals/AllRentalInfo";
+import AllPayments from "./_components/payment/AllPayments";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -57,6 +58,11 @@ const tabs = [
         id: "rentals",
         label: "Rentals",
         component: <AllRentalInfo></AllRentalInfo>,
+    },
+    {
+        id: "payemnts",
+        label: "Payments",
+        component: <AllPayments></AllPayments>,
     },
 ];
 
