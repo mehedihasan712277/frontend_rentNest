@@ -49,12 +49,12 @@ const Navbar = async () => {
                         </div>
                     ) : (
                         <div className="flex items-center gap-2">
-                            <Button variant="ghost">
-                                <Link href="/auth/login">Log in</Link>
-                            </Button>
-                            <Button>
-                                <Link href="/auth/register">Sign up</Link>
-                            </Button>
+                            <Link href="/auth/login">
+                                <Button variant="ghost">Log in</Button>
+                            </Link>
+                            <Link href="/auth/register">
+                                <Button>Sign up</Button>
+                            </Link>
                         </div>
                     )}
                     <ModeToggle />
