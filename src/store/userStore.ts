@@ -23,18 +23,20 @@ export interface Property {
     price: number;
     area: number;
     thumbnail: string;
+    stripeProductId?: string;
+    stripePriceId?: string;
     status: string;
     createdAt: string;
     updatedAt: string;
 }
 
 export interface Amenity {
-    id: string;
+    id?: string;
     name: string;
-    description: string;
-    creatorId: string;
-    createdAt: string;
-    updatedAt: string;
+    description?: string;
+    creatorId?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export interface RentalRequest {
@@ -44,6 +46,8 @@ export interface RentalRequest {
     landlordId: string;
     message: string;
     status: string;
+    stripeSessionId?: string;
+    stripeSubscriptionId?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -74,6 +78,20 @@ export interface Rental {
     updatedAt: string;
 }
 
+// New: payments only appear on the admin "all users" endpoint
+export interface Payment {
+    id: string;
+    rentalId: string;
+    userId: string;
+    transactionId: string;
+    stripeInvoiceId: string;
+    amount: number;
+    status: string;
+    paidAt: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface UserProfile {
     id: string;
     name: string;
@@ -91,7 +109,9 @@ export interface UserProfile {
     // Only meaningful for TENANT; always [] for ADMIN/LANDLORD.
     rentalRequests: RentalRequest[];
     reviews: Review[];
-    rentals: Rental[];
+    rentals?: Rental[];
+    // Only present on the admin "all users" listing
+    payments?: Payment[];
 }
 
 interface UserProfileState {
@@ -100,6 +120,14 @@ interface UserProfileState {
     error: string | null;
     fetchProfile: () => Promise<void>;
     clearProfile: () => void;
+
+    // --- Admin: all users ---
+    allUsers: UserProfile[];
+    allUsersCount: number;
+    isLoadingAllUsers: boolean;
+    allUsersError: string | null;
+    fetchAllUsers: () => Promise<void>;
+    clearAllUsers: () => void;
 }
 
 export const useUserProfileStore = create<UserProfileState>((set) => ({
@@ -128,4 +156,44 @@ export const useUserProfileStore = create<UserProfileState>((set) => ({
     },
 
     clearProfile: () => set({ profile: null, isLoading: false, error: null }),
+
+    // --- Admin: all users ---
+    allUsers: [],
+    allUsersCount: 0,
+    isLoadingAllUsers: false,
+    allUsersError: null,
+
+    fetchAllUsers: async () => {
+        set({ isLoadingAllUsers: true, allUsersError: null });
+        try {
+            const res = await api.get<{
+                success: boolean;
+                statusCode: number;
+                count: number;
+                message: string;
+                data: UserProfile[];
+            }>("/users/all");
+            set({
+                allUsers: res.data.data,
+                allUsersCount: res.data.count,
+                isLoadingAllUsers: false,
+            });
+        } catch (err) {
+            set({
+                allUsersError:
+                    err instanceof Error
+                        ? err.message
+                        : "Could not load users.",
+                isLoadingAllUsers: false,
+            });
+        }
+    },
+
+    clearAllUsers: () =>
+        set({
+            allUsers: [],
+            allUsersCount: 0,
+            isLoadingAllUsers: false,
+            allUsersError: null,
+        }),
 }));
