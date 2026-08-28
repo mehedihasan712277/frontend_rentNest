@@ -13,9 +13,9 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import ManageProperty from "./_components/properties/ManageProperty";
-import ManageRequestToProperty from "./_components/requests/ManageRequestToProperty";
 import ManageAmenity from "./_components/amenity/ManageAmenity";
 import { UserProfileCard } from "@/components/shared/UserProfileCard";
+import RentalRequestToMyProperties from "./_components/requests/RentalRequestToMyProperties";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -27,7 +27,7 @@ const tabs = [
     {
         id: "requests",
         label: "Requests",
-        component: <ManageRequestToProperty></ManageRequestToProperty>,
+        component: <RentalRequestToMyProperties></RentalRequestToMyProperties>,
     },
     {
         id: "amenity",

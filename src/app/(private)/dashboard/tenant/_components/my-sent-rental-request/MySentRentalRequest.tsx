@@ -66,6 +66,7 @@ function SentRequestCard({ request }: SentRequestCardProps) {
     );
 
     const isDeleting = tenantDeletingId === request.id;
+    const isWithdraw = request.status === "PENDING";
 
     const handleConfirmDelete = async () => {
         const ok = await tenantDeleteRequest(request.id);
@@ -105,9 +106,11 @@ function SentRequestCard({ request }: SentRequestCardProps) {
                     <AlertDialogTrigger
                         className={cn(
                             buttonVariants({
-                                variant: "destructive",
+                                variant: isWithdraw ? "default" : "destructive",
                                 size: "sm",
                             }),
+                            isWithdraw &&
+                                "bg-yellow-500 text-yellow-950 hover:bg-yellow-600",
                             "disabled:pointer-events-none disabled:opacity-50",
                         )}
                         disabled={isDeleting || request.status === "DELETED"}
@@ -115,24 +118,39 @@ function SentRequestCard({ request }: SentRequestCardProps) {
                         {isDeleting ? (
                             <>
                                 <Loader2 className="size-4 animate-spin" />
-                                Deleting…
+                                {isWithdraw ? "Withdrawing…" : "Deleting…"}
                             </>
                         ) : (
                             <>
                                 <Trash2 className="size-4" />
-                                Delete request
+                                {isWithdraw ? "Withdraw" : "Delete request"}
                             </>
                         )}
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>
-                                Delete this rental request?
+                                {isWithdraw
+                                    ? "Withdraw this rental request?"
+                                    : "Delete this rental request?"}
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                                This will withdraw your request for &ldquo;
-                                {request.property.title}&rdquo;. This can&apos;t
-                                be undone.
+                                {isWithdraw ? (
+                                    <>
+                                        This will withdraw your pending request
+                                        for &ldquo;
+                                        {request.property.title}&rdquo;. The
+                                        landlord will no longer see it. This
+                                        can&apos;t be undone.
+                                    </>
+                                ) : (
+                                    <>
+                                        This will permanently remove your
+                                        request for &ldquo;
+                                        {request.property.title}&rdquo; from
+                                        your history. This can&apos;t be undone.
+                                    </>
+                                )}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -145,8 +163,20 @@ function SentRequestCard({ request }: SentRequestCardProps) {
                                     handleConfirmDelete();
                                 }}
                                 disabled={isDeleting}
+                                className={cn(
+                                    isWithdraw &&
+                                        "bg-yellow-500 text-yellow-950 hover:bg-yellow-600",
+                                    !isWithdraw &&
+                                        "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+                                )}
                             >
-                                {isDeleting ? "Deleting…" : "Delete"}
+                                {isDeleting
+                                    ? isWithdraw
+                                        ? "Withdrawing…"
+                                        : "Deleting…"
+                                    : isWithdraw
+                                      ? "Withdraw"
+                                      : "Delete"}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
