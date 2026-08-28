@@ -171,16 +171,16 @@ export function UserProfileCard() {
                     <Card>
                         <CardHeader>
                             <CardTitle>
-                                Rentals ({profile.rentals.length})
+                                Rentals ({profile.rentals?.length})
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {profile.rentals.length === 0 && (
+                            {profile.rentals?.length === 0 && (
                                 <p className="text-sm text-muted-foreground">
                                     No active rentals.
                                 </p>
                             )}
-                            {profile.rentals.map((rental) => (
+                            {profile.rentals?.map((rental) => (
                                 <div
                                     key={rental.id}
                                     className="rounded-md border p-3"
