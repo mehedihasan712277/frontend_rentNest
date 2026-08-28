@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,11 +25,19 @@ import {
 import { Loader2, RefreshCw } from "lucide-react";
 import {
     UserProfile,
+    UserRole,
     UserStatus,
     useUserProfileStore,
 } from "@/store/userStore";
 
 const STATUS_OPTIONS: UserStatus[] = ["ACTIVE", "BLOCKED", "DELETED"];
+
+const ROLE_FILTER_OPTIONS: Array<UserRole | "ALL"> = [
+    "ALL",
+    "TENANT",
+    "LANDLORD",
+    "ADMIN",
+];
 
 const statusBadgeVariant = (status: UserStatus) => {
     switch (status) {
@@ -69,11 +77,17 @@ const ManageUsers = () => {
         null,
     );
     const [resultDialog, setResultDialog] = useState<ResultDialog | null>(null);
+    const [roleFilter, setRoleFilter] = useState<UserRole | "ALL">("ALL");
 
     useEffect(() => {
         fetchAllUsers();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const filteredUsers = useMemo(() => {
+        if (roleFilter === "ALL") return allUsers;
+        return allUsers.filter((user) => user.role === roleFilter);
+    }, [allUsers, roleFilter]);
 
     const handleStatusSelect = (user: UserProfile, newStatus: UserStatus) => {
         if (newStatus === user.status) return;
@@ -113,27 +127,48 @@ const ManageUsers = () => {
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 className="text-xl font-semibold">Manage Users</h2>
                     <p className="text-sm text-muted-foreground">
-                        {allUsersCount} user{allUsersCount === 1 ? "" : "s"}{" "}
-                        total
+                        {filteredUsers.length} of {allUsersCount} user
+                        {allUsersCount === 1 ? "" : "s"} shown
                     </p>
                 </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRefresh}
-                    disabled={isLoadingAllUsers}
-                >
-                    <RefreshCw
-                        className={`mr-2 h-4 w-4 ${
-                            isLoadingAllUsers ? "animate-spin" : ""
-                        }`}
-                    />
-                    Refresh
-                </Button>
+
+                <div className="flex items-center gap-2">
+                    <Select
+                        value={roleFilter}
+                        onValueChange={(value) =>
+                            setRoleFilter(value as UserRole | "ALL")
+                        }
+                    >
+                        <SelectTrigger className="h-9 w-36">
+                            <SelectValue placeholder="Filter by role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {ROLE_FILTER_OPTIONS.map((role) => (
+                                <SelectItem key={role} value={role}>
+                                    {role === "ALL" ? "All roles" : role}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRefresh}
+                        disabled={isLoadingAllUsers}
+                    >
+                        <RefreshCw
+                            className={`mr-2 h-4 w-4 ${
+                                isLoadingAllUsers ? "animate-spin" : ""
+                            }`}
+                        />
+                        Refresh
+                    </Button>
+                </div>
             </div>
 
             {allUsersError && (
@@ -160,12 +195,14 @@ const ManageUsers = () => {
                                 <Skeleton className="h-8 w-full" />
                             </div>
                         ))
-                    ) : allUsers.length === 0 ? (
+                    ) : filteredUsers.length === 0 ? (
                         <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                            No users found.
+                            {allUsers.length === 0
+                                ? "No users found."
+                                : "No users match this role."}
                         </div>
                     ) : (
-                        allUsers.map((user) => (
+                        filteredUsers.map((user) => (
                             <div
                                 key={user.id}
                                 className="flex flex-col gap-3 px-4 py-3 md:grid md:grid-cols-[2fr_1fr_1.5fr_1fr_1fr_1fr] md:items-center md:gap-2"
@@ -226,7 +263,7 @@ const ManageUsers = () => {
                                     </Select>
                                 </div>
 
-                                {/* Counts — inline stats on mobile, right-aligned columns on md+ */}
+                                {/* Counts */}
                                 <div className="flex items-center justify-between text-sm md:block md:text-right">
                                     <span className="text-muted-foreground md:hidden">
                                         Properties
