@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { api } from "@/lib/axios-client";
 
 export type UserRole = "TENANT" | "LANDLORD" | "ADMIN";
-export type UserStatus = "ACTIVE" | "BLOCKED";
+export type UserStatus = "ACTIVE" | "BLOCKED" | "DELETED";
 
 export interface ProfileDetails {
     id: string;
@@ -114,6 +114,11 @@ export interface UserProfile {
     payments?: Payment[];
 }
 
+interface UpdateUserStatusPayload {
+    id: string;
+    status: UserStatus;
+}
+
 interface UserProfileState {
     profile: UserProfile | null;
     isLoading: boolean;
@@ -128,9 +133,14 @@ interface UserProfileState {
     allUsersError: string | null;
     fetchAllUsers: () => Promise<void>;
     clearAllUsers: () => void;
+
+    // --- Admin: update user status ("delete-account" route) ---
+    isUpdatingUserStatus: boolean;
+    updateUserStatusError: string | null;
+    updateUserStatus: (payload: UpdateUserStatusPayload) => Promise<boolean>;
 }
 
-export const useUserProfileStore = create<UserProfileState>((set) => ({
+export const useUserProfileStore = create<UserProfileState>((set, get) => ({
     profile: null,
     isLoading: false,
     error: null,
@@ -196,4 +206,44 @@ export const useUserProfileStore = create<UserProfileState>((set) => ({
             isLoadingAllUsers: false,
             allUsersError: null,
         }),
+
+    // --- Admin: update user status ("delete-account" route) ---
+    isUpdatingUserStatus: false,
+    updateUserStatusError: null,
+
+    updateUserStatus: async ({ id, status }) => {
+        set({ isUpdatingUserStatus: true, updateUserStatusError: null });
+        try {
+            await api.put<{
+                success: boolean;
+                statusCode: number;
+                message: string;
+                data?: UserProfile;
+            }>("/users/delete-account", { id, status });
+
+            // Reflect the change locally: update the matching entry in allUsers,
+            // and the current profile if it's the same user.
+            set((state) => ({
+                allUsers: state.allUsers.map((u) =>
+                    u.id === id ? { ...u, status } : u,
+                ),
+                profile:
+                    state.profile && state.profile.id === id
+                        ? { ...state.profile, status }
+                        : state.profile,
+                isUpdatingUserStatus: false,
+            }));
+
+            return true;
+        } catch (err) {
+            set({
+                updateUserStatusError:
+                    err instanceof Error
+                        ? err.message
+                        : "Could not update user status.",
+                isUpdatingUserStatus: false,
+            });
+            return false;
+        }
+    },
 }));
