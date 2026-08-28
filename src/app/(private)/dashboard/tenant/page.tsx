@@ -13,6 +13,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { UserProfileCard } from "@/components/shared/UserProfileCard";
+import MySentRentalRequest from "./_components/my-sent-rental-request/MySentRentalRequest";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -20,6 +21,11 @@ const tabs = [
         id: "profile",
         label: "Profile",
         component: <UserProfileCard></UserProfileCard>,
+    },
+    {
+        id: "requests",
+        label: "Requests",
+        component: <MySentRentalRequest></MySentRentalRequest>,
     },
 ];
 
