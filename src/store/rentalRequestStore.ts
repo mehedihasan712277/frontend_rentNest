@@ -133,6 +133,16 @@ interface UpdateRentalRequestStatusResponse {
     data: RentalRequestCore;
 }
 
+/** Response from creating a Stripe checkout session for an approved request. */
+interface SubscribeToRentalRequestResponse {
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data: {
+        url: string;
+    };
+}
+
 /** The message returned by a mutating call, shown in a dialog. */
 interface OperationFeedback {
     message: string;
@@ -172,6 +182,9 @@ interface RentalRequestState {
     // ---- tenant: delete (soft delete, status -> DELETED) ----
     tenantDeletingId: string | null;
 
+    // ---- tenant: subscribe (Stripe checkout for an approved request) ----
+    subscribingId: string | null;
+
     // ---- landlord: rental-request-to-me ----
     receivedRequests: ReceivedRentalRequest[];
     isLoadingReceived: boolean;
@@ -199,6 +212,7 @@ interface RentalRequestState {
     ) => Promise<boolean>;
     fetchMySentRequests: () => Promise<void>;
     tenantDeleteRequest: (id: string) => Promise<boolean>;
+    subscribeToRentalRequest: (id: string) => Promise<boolean>;
 
     // ---- landlord actions ----
     fetchRequestsToMe: () => Promise<void>;
@@ -223,6 +237,7 @@ export const useRentalRequestStore = create<RentalRequestState>((set, get) => ({
     isCreating: false,
 
     tenantDeletingId: null,
+    subscribingId: null,
 
     receivedRequests: [],
     isLoadingReceived: false,
@@ -323,6 +338,34 @@ export const useRentalRequestStore = create<RentalRequestState>((set, get) => ({
             return false;
         } finally {
             set({ tenantDeletingId: null });
+        }
+    },
+
+    subscribeToRentalRequest: async (id) => {
+        set({ subscribingId: id });
+        try {
+            const res = await api.post<SubscribeToRentalRequestResponse>(
+                `/rental-requests/${id}/subscribe`,
+            );
+            // Send the tenant to Stripe checkout in a new tab.
+            window.open(res.data.data.url, "_blank", "noopener,noreferrer");
+            set({
+                feedback: { message: res.data.message, variant: "success" },
+            });
+            return true;
+        } catch (err) {
+            set({
+                feedback: {
+                    message: getErrorMessage(
+                        err,
+                        "Could not start the subscription checkout.",
+                    ),
+                    variant: "error",
+                },
+            });
+            return false;
+        } finally {
+            set({ subscribingId: null });
         }
     },
 
