@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { useRentalRequestStore } from "@/store/rentalRequestStore";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
@@ -13,6 +13,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface RequestToRentButtonProps {
     propertyId: string;
@@ -52,10 +53,9 @@ export function RequestToRentButton({ propertyId }: RequestToRentButtonProps) {
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogTrigger>
-                <Button className="mt-6 w-full">Request to rent</Button>
+            <DialogTrigger className={cn(buttonVariants(), "mt-6 w-full")}>
+                Request to rent
             </DialogTrigger>
-
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Request to rent this property</DialogTitle>
