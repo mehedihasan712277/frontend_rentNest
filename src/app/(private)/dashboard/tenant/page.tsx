@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { UserProfileCard } from "@/components/shared/UserProfileCard";
 import MySentRentalRequest from "./_components/my-sent-rental-request/MySentRentalRequest";
+import MyRentals from "./_components/myrentals/MyRentals";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -26,6 +27,11 @@ const tabs = [
         id: "requests",
         label: "Requests",
         component: <MySentRentalRequest></MySentRentalRequest>,
+    },
+    {
+        id: "rentals",
+        label: "Rentals",
+        component: <MyRentals></MyRentals>,
     },
 ];
 
