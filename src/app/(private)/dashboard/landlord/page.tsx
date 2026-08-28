@@ -18,6 +18,7 @@ import { UserProfileCard } from "@/components/shared/UserProfileCard";
 import RentalRequestToMyProperties from "./_components/requests/RentalRequestToMyProperties";
 import MyRentedProperty from "./_components/rented-property/MyRentedProperty";
 import PaymentOnMyProperty from "./_components/payment/PaymentOnMyProperty";
+import ReviewsToMyproperty from "./_components/review/ReviewsToMyproperty";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -50,6 +51,11 @@ const tabs = [
         id: "payments",
         label: "Payments",
         component: <PaymentOnMyProperty></PaymentOnMyProperty>,
+    },
+    {
+        id: "reviews",
+        label: "Reviews",
+        component: <ReviewsToMyproperty></ReviewsToMyproperty>,
     },
 ];
 
