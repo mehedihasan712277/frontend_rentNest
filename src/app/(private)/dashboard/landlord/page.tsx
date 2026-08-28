@@ -16,6 +16,7 @@ import ManageProperty from "./_components/properties/ManageProperty";
 import ManageAmenity from "./_components/amenity/ManageAmenity";
 import { UserProfileCard } from "@/components/shared/UserProfileCard";
 import RentalRequestToMyProperties from "./_components/requests/RentalRequestToMyProperties";
+import MyRentedProperty from "./_components/rented-property/MyRentedProperty";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -38,6 +39,11 @@ const tabs = [
         id: "profile",
         label: "Profile",
         component: <UserProfileCard></UserProfileCard>,
+    },
+    {
+        id: "rentedproperty",
+        label: "Rents",
+        component: <MyRentedProperty></MyRentedProperty>,
     },
 ];
 
