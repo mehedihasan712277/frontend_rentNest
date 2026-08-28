@@ -21,6 +21,7 @@ import AllRentalRequest from "./_components/requests/AllRentalRequest";
 import ManageUsers from "./_components/users/ManageUsers";
 import AllRentalInfo from "./_components/rentals/AllRentalInfo";
 import AllPayments from "./_components/payment/AllPayments";
+import ManageAllReviews from "./_components/review/ManageAllReviews";
 
 // 👉 Add new tabs here — nothing else in the component needs to change
 const tabs = [
@@ -63,6 +64,11 @@ const tabs = [
         id: "payemnts",
         label: "Payments",
         component: <AllPayments></AllPayments>,
+    },
+    {
+        id: "reviewss",
+        label: "Reviews",
+        component: <ManageAllReviews></ManageAllReviews>,
     },
 ];
 

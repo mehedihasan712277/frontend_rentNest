@@ -1,0 +1,394 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2, RefreshCw } from "lucide-react";
+import { Review, ReviewStatus, useReviewStore } from "@/store/reviewStore";
+
+const STATUS_OPTIONS: ReviewStatus[] = ["APPROVED", "CANCELED"];
+
+const STATUS_FILTER_OPTIONS: Array<ReviewStatus | "ALL"> = [
+    "ALL",
+    "APPROVED",
+    "CANCELED",
+];
+
+const statusBadgeVariant = (status: ReviewStatus) => {
+    switch (status) {
+        case "APPROVED":
+            return "default";
+        case "CANCELED":
+            return "destructive";
+        default:
+            return "outline";
+    }
+};
+
+const formatDate = (value: string) => {
+    return new Date(value).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
+};
+
+interface PendingChange {
+    id: string;
+    propertyTitle: string;
+    currentStatus: ReviewStatus;
+    newStatus: ReviewStatus;
+}
+
+interface ResultDialog {
+    type: "success" | "error";
+    message: string;
+}
+
+const ManageAllReviews = () => {
+    const {
+        reviews,
+        reviewsCount,
+        isLoadingReviews,
+        reviewsError,
+        fetchAllReviews,
+        isUpdatingReviewStatus,
+        updateReviewStatus,
+    } = useReviewStore();
+
+    const [statusFilter, setStatusFilter] = useState<ReviewStatus | "ALL">(
+        "ALL",
+    );
+    const [pendingChange, setPendingChange] = useState<PendingChange | null>(
+        null,
+    );
+    const [resultDialog, setResultDialog] = useState<ResultDialog | null>(null);
+
+    useEffect(() => {
+        fetchAllReviews();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const filteredReviews: Review[] = useMemo(() => {
+        if (statusFilter === "ALL") return reviews;
+        return reviews.filter((review) => review.status === statusFilter);
+    }, [reviews, statusFilter]);
+
+    const handleStatusSelect = (review: Review, newStatus: ReviewStatus) => {
+        if (newStatus === review.status) return;
+        setPendingChange({
+            id: review.id,
+            propertyTitle: review.property.title,
+            currentStatus: review.status,
+            newStatus,
+        });
+    };
+
+    const handleConfirmChange = async () => {
+        if (!pendingChange) return;
+
+        const { id, propertyTitle, newStatus } = pendingChange;
+        const success = await updateReviewStatus({
+            reviewId: id,
+            status: newStatus,
+        });
+
+        setPendingChange(null);
+
+        if (success) {
+            await fetchAllReviews();
+            setResultDialog({
+                type: "success",
+                message: `Review for "${propertyTitle}" was updated to ${newStatus}.`,
+            });
+        } else {
+            const errMessage =
+                useReviewStore.getState().updateReviewStatusError ??
+                "Something went wrong while updating the review status.";
+            setResultDialog({ type: "error", message: errMessage });
+        }
+    };
+
+    const handleRefresh = () => {
+        fetchAllReviews();
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 className="text-xl font-semibold">Manage Reviews</h2>
+                    <p className="text-sm text-muted-foreground">
+                        {filteredReviews.length} of {reviewsCount} review
+                        {reviewsCount === 1 ? "" : "s"} shown
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Select
+                        value={statusFilter}
+                        onValueChange={(value) =>
+                            setStatusFilter(value as ReviewStatus | "ALL")
+                        }
+                    >
+                        <SelectTrigger className="h-9 w-40">
+                            <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {STATUS_FILTER_OPTIONS.map((status) => (
+                                <SelectItem key={status} value={status}>
+                                    {status === "ALL" ? "All statuses" : status}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRefresh}
+                        disabled={isLoadingReviews}
+                    >
+                        <RefreshCw
+                            className={`mr-2 h-4 w-4 ${
+                                isLoadingReviews ? "animate-spin" : ""
+                            }`}
+                        />
+                        Refresh
+                    </Button>
+                </div>
+            </div>
+
+            {reviewsError && (
+                <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                    {reviewsError}
+                </div>
+            )}
+
+            <div className="rounded-md border">
+                {/* Header row — only visible on md+ where columns line up */}
+                <div className="hidden border-b bg-muted/50 px-4 py-2 text-xs font-medium text-muted-foreground md:grid md:grid-cols-[2fr_1.5fr_1.5fr_2.5fr_0.75fr_1.5fr]">
+                    <span>Property</span>
+                    <span>Landlord</span>
+                    <span>Tenant</span>
+                    <span>Comment</span>
+                    <span>Rating</span>
+                    <span>Status</span>
+                </div>
+
+                <div className="divide-y">
+                    {isLoadingReviews && reviews.length === 0 ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="px-4 py-3">
+                                <Skeleton className="h-14 w-full" />
+                            </div>
+                        ))
+                    ) : filteredReviews.length === 0 ? (
+                        <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+                            {reviews.length === 0
+                                ? "No reviews found."
+                                : "No reviews match this status."}
+                        </div>
+                    ) : (
+                        filteredReviews.map((review) => (
+                            <div
+                                key={review.id}
+                                className="flex flex-col gap-3 px-4 py-3 md:grid md:grid-cols-[2fr_1.5fr_1.5fr_2.5fr_0.75fr_1.5fr] md:items-center md:gap-2"
+                            >
+                                {/* Property */}
+                                <div className="flex flex-col">
+                                    <span className="font-medium">
+                                        {review.property.title}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {review.property.category.name} ·{" "}
+                                        {formatDate(review.createdAt)}
+                                    </span>
+                                </div>
+
+                                {/* Landlord */}
+                                <div className="flex flex-col">
+                                    <span className="text-xs text-muted-foreground md:hidden">
+                                        Landlord
+                                    </span>
+                                    <span className="truncate text-sm">
+                                        {review.property.landlord.name}
+                                    </span>
+                                </div>
+
+                                {/* Tenant */}
+                                <div className="flex flex-col">
+                                    <span className="text-xs text-muted-foreground md:hidden">
+                                        Tenant
+                                    </span>
+                                    <span className="truncate text-sm">
+                                        {review.tenant.name}
+                                    </span>
+                                </div>
+
+                                {/* Comment */}
+                                <div className="flex flex-col">
+                                    <span className="text-xs text-muted-foreground md:hidden">
+                                        Comment
+                                    </span>
+                                    <span className="text-sm">
+                                        {review.comment}
+                                    </span>
+                                </div>
+
+                                {/* Rating */}
+                                <div className="flex items-center justify-between text-sm md:block">
+                                    <span className="text-muted-foreground md:hidden">
+                                        Rating
+                                    </span>
+                                    <span className="font-medium">
+                                        {review.rating} / 5
+                                    </span>
+                                </div>
+
+                                {/* Status */}
+                                <div className="flex items-center gap-2">
+                                    <Badge
+                                        variant={statusBadgeVariant(
+                                            review.status,
+                                        )}
+                                    >
+                                        {review.status}
+                                    </Badge>
+                                    <Select
+                                        value={review.status}
+                                        onValueChange={(value) =>
+                                            handleStatusSelect(
+                                                review,
+                                                value as ReviewStatus,
+                                            )
+                                        }
+                                        disabled={
+                                            isUpdatingReviewStatus &&
+                                            pendingChange?.id === review.id
+                                        }
+                                    >
+                                        <SelectTrigger className="h-8 w-32.5">
+                                            <SelectValue placeholder="Change status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {STATUS_OPTIONS.map((status) => (
+                                                <SelectItem
+                                                    key={status}
+                                                    value={status}
+                                                >
+                                                    {status}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* Confirmation dialog before updating status */}
+            <AlertDialog
+                open={pendingChange !== null}
+                onOpenChange={(open) => {
+                    if (!open) setPendingChange(null);
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Change review status?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {pendingChange && (
+                                <>
+                                    You&apos;re about to change the review for{" "}
+                                    <span className="font-medium">
+                                        {pendingChange.propertyTitle}
+                                    </span>{" "}
+                                    from{" "}
+                                    <span className="font-medium">
+                                        {pendingChange.currentStatus}
+                                    </span>{" "}
+                                    to{" "}
+                                    <span className="font-medium">
+                                        {pendingChange.newStatus}
+                                    </span>
+                                    . This action will take effect immediately.
+                                </>
+                            )}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isUpdatingReviewStatus}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleConfirmChange();
+                            }}
+                            disabled={isUpdatingReviewStatus}
+                        >
+                            {isUpdatingReviewStatus && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            Confirm
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Success / error result dialog */}
+            <AlertDialog
+                open={resultDialog !== null}
+                onOpenChange={(open) => {
+                    if (!open) setResultDialog(null);
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {resultDialog?.type === "success"
+                                ? "Success"
+                                : "Error"}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {resultDialog?.message}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction
+                            onClick={() => setResultDialog(null)}
+                        >
+                            OK
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+    );
+};
+
+export default ManageAllReviews;
