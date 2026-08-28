@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     disableTransitionOnChange
                 >
                     <Navbar></Navbar>
-                    <div>{children}</div>
+                    <div className="min-h-[calc(100vh-312px)]">{children}</div>
                     <Footer />
                 </ThemeProvider>
             </body>
