@@ -1,71 +1,93 @@
-"use client";
-
-import { useEffect } from "react";
-import { useParams } from "next/navigation";
 import { MapPin, Ruler, User } from "lucide-react";
+import { notFound } from "next/navigation";
 
-import { usePropertyStore } from "@/store/propertyStore";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { RequestToRentButton } from "../_components/RequestToRentButton";
 
-function PropertyDetailsSkeleton() {
-    return (
-        <div className="container mx-auto px-4 py-8">
-            <Skeleton className="aspect-video w-full rounded-xl" />
-            <div className="mt-6 space-y-4">
-                <Skeleton className="h-8 w-2/3" />
-                <Skeleton className="h-5 w-1/3" />
-                <Skeleton className="h-24 w-full" />
-            </div>
-        </div>
-    );
+interface PropertyCategory {
+    name: string;
 }
 
-const PropertyDetailsPage = () => {
-    const params = useParams<{ id: string }>();
-    const { id } = params;
+interface PropertyAmenity {
+    name: string;
+    description: string;
+}
 
-    const selectedProperty = usePropertyStore((s) => s.selectedProperty);
-    const isLoadingDetails = usePropertyStore((s) => s.isLoadingDetails);
-    const detailsError = usePropertyStore((s) => s.detailsError);
-    const fetchPropertyDetails = usePropertyStore(
-        (s) => s.fetchPropertyDetails,
+interface PropertyLandlord {
+    name: string;
+}
+
+interface PropertyDetail {
+    id: string;
+    title: string;
+    description: string;
+    location: string;
+    price: number;
+    area: number;
+    thumbnail: string;
+    status: string;
+    category: PropertyCategory | null;
+    amenities: PropertyAmenity[];
+    landlord: PropertyLandlord | null;
+}
+
+interface GetPropertyDetailsResponse {
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data: PropertyDetail;
+}
+
+/**
+ * Fetched directly on the server rather than through `usePropertyStore`,
+ * since that store is a client-side Zustand hook. If this endpoint needs
+ * an auth token, forward it here (e.g. reading it from cookies via
+ * `next/headers`) instead of relying on the axios-client interceptor,
+ * which only runs in the browser.
+ */
+async function getPropertyDetails(id: string): Promise<PropertyDetail | null> {
+    const res = await fetch(
+        `${process.env.API_BASE_URL}/api/properties/${id}`,
+        { cache: "no-store" },
     );
-    const clearPropertyDetails = usePropertyStore(
-        (s) => s.clearPropertyDetails,
-    );
 
-    useEffect(() => {
-        if (id) fetchPropertyDetails(id);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error("Could not load property details.");
 
-        // Clear stale details when leaving the page / switching ids
-        return () => clearPropertyDetails();
-    }, [id, fetchPropertyDetails, clearPropertyDetails]);
+    const json: GetPropertyDetailsResponse = await res.json();
+    return json.data;
+}
 
-    if (isLoadingDetails) {
-        return <PropertyDetailsSkeleton />;
+interface PropertyDetailsPageProps {
+    // Next.js 15+ passes route params as a Promise. On Next 14, change this
+    // to `{ id: string }` and drop the `await` below.
+    params: Promise<{ id: string }>;
+}
+
+const PropertyDetailsPage = async ({ params }: PropertyDetailsPageProps) => {
+    const { id } = await params;
+
+    let property: PropertyDetail | null = null;
+    let loadError: string | null = null;
+
+    try {
+        property = await getPropertyDetails(id);
+    } catch {
+        loadError = "Could not load property details.";
     }
 
-    if (detailsError) {
+    if (loadError) {
         return (
             <div className="container mx-auto flex flex-col items-center justify-center gap-4 px-4 py-20 text-center">
                 <p className="text-lg font-medium text-destructive">
-                    {detailsError}
+                    {loadError}
                 </p>
-                <Button onClick={() => id && fetchPropertyDetails(id)}>
-                    Try again
-                </Button>
             </div>
         );
     }
 
-    if (!selectedProperty) {
-        return (
-            <div className="container mx-auto flex flex-col items-center justify-center gap-2 px-4 py-20 text-center">
-                <p className="text-lg font-medium">Property not found</p>
-            </div>
-        );
+    if (!property) {
+        notFound();
     }
 
     const {
@@ -79,7 +101,7 @@ const PropertyDetailsPage = () => {
         category,
         amenities,
         landlord,
-    } = selectedProperty;
+    } = property;
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -172,7 +194,7 @@ const PropertyDetailsPage = () => {
                             <span>{landlord?.name}</span>
                         </div>
 
-                        <Button className="mt-6 w-full">Request to rent</Button>
+                        <RequestToRentButton propertyId={id} />
                     </div>
                 </aside>
             </div>
